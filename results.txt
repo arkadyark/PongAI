@@ -1,0 +1,95 @@
+Left is v1, right is v2
+2014-10-21 06:25:21
+Score for the left player 5000
+Score for the right player 3240
+
+2014-10-21 07:45:23
+Score for the left player 5000
+Score for the right player 1445
+
+2014-10-21 08:57:15
+Score for the left player 3248
+Score for the right player 5000
+
+Left is v1, right is v2
+Left is v1, right is chaser
+Left is v2, right is chaser
+Left is v1, right is v2
+Left is v1, right is v2
+Left is v1, right is v2
+2014-10-21 16:14:03
+Score for the left player 2
+Score for the right player 5
+
+2014-10-21 16:53:24
+Score for the left player 1
+Score for the right player 5
+
+2014-10-21 17:00:53
+Score for the left player 1
+Score for the right player 5
+
+2014-10-21 17:56:40
+Score for the left player 3
+Score for the right player 5
+
+2014-10-21 18:02:17
+Score for the left player 0
+Score for the right player 5
+
+2014-10-21 19:03:48
+Score for the left player 1
+Score for the right player 5
+
+2014-10-21 19:05:36
+Score for the left player 0
+Score for the right player 5
+
+2014-10-21 19:09:46
+Score for the left player 2
+Score for the right player 5
+
+2014-10-21 20:52:51
+Score for the left player 2
+Score for the right player 5
+
+2014-10-21 20:54:36
+Score for the left player 4
+Score for the right player 5
+
+2014-10-21 22:24:10
+Score for the left player 0
+Score for the right player 5
+
+2014-10-21 22:32:07
+Score for the left player 2
+Score for the right player 5
+
+2014-10-21 22:34:26
+Score for the left player 1
+Score for the right player 5
+
+2014-10-21 22:37:44
+Score for the left player 0
+Score for the right player 5
+
+2014-10-21 22:40:29
+Score for the left player 1
+Score for the right player 5
+
+2014-10-21 22:41:59
+Score for the left player 1
+Score for the right player 5
+
+2014-10-21 22:45:48
+Score for the left player 2
+Score for the right player 5
+
+2014-10-21 22:50:21
+Score for the left player 2
+Score for the right player 5
+
+2014-10-21 22:56:29
+Score for the left player 1
+Score for the right player 5
+

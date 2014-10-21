@@ -1,4 +1,4 @@
-#   PongAIvAI
+#	PongAIvAI
 #   Author: Michael Guerzhoy, 2014. 
 #   http://www.cs.toronto.edu/~guerzhoy/
 #   Email: guerzhoy at cs.toronto.edu
@@ -206,6 +206,7 @@ def timeout(func, args=(), kwargs={}, timeout_duration=1, default=None):
     it.start()
     it.join(timeout_duration)
     if it.isAlive():
+	print "Timed out!"
 	return default
     else:
 	return it.result
@@ -281,6 +282,11 @@ def game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, sco
 
 	clock.tick(clock_rate)
 
+    f = open('results.txt', 'a')
+    to_write = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()) + "\nScore for the left player " + str(score[0]) + "\nScore for the" +\
+	    " right player " + str(score[1]) + "\n\n"
+    f.write(to_write)
+
     font = pygame.font.Font(None, 64)	        
     if score[0] > score[1]:
 	screen.blit(font.render("Left wins!", True, white, black), [24, 32])
@@ -320,12 +326,14 @@ def init_game(mode):
 	    Paddle((table_size[0]-1-20, table_size[1]/2), paddle_size, paddle_speed, max_angle, 0, timeout)]
     ball = Ball(table_size, ball_size, paddle_bounce, wall_bounce, dust_error, init_speed_mag)
 
-    import chaser_ai, straight_no_chaser_ai
+    f = open("results.txt", "a")
+
+    import straight_no_chaser_ai_v1, straight_no_chaser_ai, chaser_ai
     if mode == '1':
 	paddles[0].move_getter = directions_from_input
 	paddles[1].move_getter = straight_no_chaser_ai.move_getter
     if mode == '2':
-	paddles[0].move_getter = chaser_ai.chaser
+	paddles[0].move_getter = chaser_ai.chaser 
 	paddles[1].move_getter = straight_no_chaser_ai.move_getter
     game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, score_to_win)
     pygame.quit()
