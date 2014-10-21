@@ -83,8 +83,8 @@ class Paddle:
 		(self.frect.pos[0] + self.frect.size[0]*self.facing, self.frect.pos[1] + self.frect.size[1]-1)
 		)
 
-	def get_angle(self, y):
-	    center = self.frect.pos[1]+self.size[1]/2
+    def get_angle(self, y):
+	center = self.frect.pos[1]+self.size[1]/2
 	rel_dist_from_c = ((y-center)/self.size[1])
 	rel_dist_from_c = min(.5, rel_dist_from_c)
 	rel_dist_from_c = max(-.5, rel_dist_from_c)
