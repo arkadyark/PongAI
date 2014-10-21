@@ -206,7 +206,12 @@ def timeout(func, args=(), kwargs={}, timeout_duration=1, default=None):
     it.start()
     it.join(timeout_duration)
     if it.isAlive():
+<<<<<<< HEAD
+	print "Timed out!"
+	return default
+=======
         return default
+>>>>>>> c4d45b6f6489b820236a99ff2fade393251c9def
     else:
         return it.result
 
@@ -281,12 +286,16 @@ def game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, sco
 
         clock.tick(clock_rate)
 
+<<<<<<< HEAD
     f = open('results.txt', 'a')
     to_write = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()) + "\nScore for the left player " + str(score[0]) + "\nScore for the" +\
 	    " right player " + str(score[1]) + "\n\n"
     f.write(to_write)
 
     font = pygame.font.Font(None, 64)	        
+=======
+    font = pygame.font.Font(None, 64)                
+>>>>>>> c4d45b6f6489b820236a99ff2fade393251c9def
     if score[0] > score[1]:
         screen.blit(font.render("Left wins!", True, white, black), [24, 32])
     else:
@@ -332,8 +341,13 @@ def init_game(mode):
         paddles[0].move_getter = directions_from_input
         paddles[1].move_getter = straight_no_chaser_ai.move_getter
     if mode == '2':
+<<<<<<< HEAD
+	paddles[0].move_getter = chaser_ai.chaser 
+	paddles[1].move_getter = straight_no_chaser_ai.move_getter
+=======
         paddles[0].move_getter = chaser_ai.chaser
         paddles[1].move_getter = straight_no_chaser_ai.move_getter
+>>>>>>> c4d45b6f6489b820236a99ff2fade393251c9def
     game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, score_to_win)
     pygame.quit()
 
