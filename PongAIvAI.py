@@ -315,7 +315,7 @@ def init_game(mode):
     timeout = .200
     clock_rate = 80
     turn_wait_rate = 3
-    score_to_win = 5
+    score_to_win = 100
 
 
     screen = pygame.display.set_mode(table_size)    

@@ -117,3 +117,31 @@ Score for the right player 5
 Score for the left player 0
 Score for the right player 5
 
+2014-10-22 00:40:06
+Score for the left player 1
+Score for the right player 5
+
+2014-10-22 00:43:17
+Score for the left player 4
+Score for the right player 5
+
+2014-10-22 00:45:05
+Score for the left player 2
+Score for the right player 5
+
+2014-10-22 00:46:37
+Score for the left player 1
+Score for the right player 5
+
+2014-10-22 00:48:28
+Score for the left player 2
+Score for the right player 5
+
+2014-10-22 00:50:15
+Score for the left player 5
+Score for the right player 4
+
+2014-10-22 01:26:51
+Score for the left player 37
+Score for the right player 100
+
