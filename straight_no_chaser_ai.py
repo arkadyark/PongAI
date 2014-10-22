@@ -38,7 +38,7 @@ def move_getter(paddle_frect, other_paddle_frect, ball_frect, table_size):
     global turn_number
 
     if turn_number == 1:
-	initialize(paddle_frect, other_paddle_frect, table_size[0])
+	initialize(paddle_frect, other_paddle_frect, table_size)
     turn_number += 1
     if move_getter.previous_ball_pos != None:
 	move_getter.ball_vel = get_vel(move_getter.previous_ball_pos, ball_frect.pos)
@@ -57,13 +57,12 @@ def move_getter(paddle_frect, other_paddle_frect, ball_frect, table_size):
     else:
 	paddle_edge = paddle_frect.pos[0]
 	other_paddle_edge = paddle_frect.size[0]
-
     if not moving_away:
 	# Ball is coming to me
 	trajectory = get_ball_trajectory(move_getter.ball_vel, ball_frect.pos, paddle_edge, table_size[1])
 	estimated_ball_pos = trajectory['position'] + ball_frect.size[1]/2
 	possible_collision_positions = get_possible_positions(trajectory, paddle_frect)
-	paddle_target_position = get_optimal_target(possible_collision_positions, paddle_frect, other_paddle_frect, move_getter.ball_vel)
+	paddle_target_position = get_optimal_target(possible_collision_positions, estimated_ball_pos, paddle_frect, other_paddle_frect, move_getter.ball_vel, ball_frect, paddle_edge, other_paddle_edge)
 	if out_of_reach(paddle_frect, trajectory, True):
 	    # Out of reach, don't bother
 	    if not turn_number % 10:
@@ -90,19 +89,7 @@ def move_getter(paddle_frect, other_paddle_frect, ball_frect, table_size):
 		collision_opponent_y = 0
 	    elif collision_opponent_y > table_size[1]:
 		collision_opponent_y = table_size[1]
-	    projected_theta = get_angle(collision_opponent_y, other_paddle_frect.size[1], trajectory['position'] + 0.5*ball_frect.size[1], not move_getter.left_paddle)
-	    projected_vel = [math.cos(projected_theta)*move_getter.ball_vel[0] - \
-		    math.sin(projected_theta)*move_getter.ball_vel[1],
-		    math.sin(projected_theta)*move_getter.ball_vel[0] + \
-			    math.cos(projected_theta)*move_getter.ball_vel[1]]
-	    projected_vel[0] = -projected_vel[0]
-	    projected_vel = [math.cos(-projected_theta)*projected_vel[0] - \
-		    math.sin(-projected_theta)*projected_vel[0],
-		    math.sin(-projected_theta)*projected_vel[0] + \
-			    math.cos(-projected_theta)*projected_vel[1]]
-	    if abs(projected_vel[0]) < 1:
-		projected_vel[0] = 0.95*(2*(not move_getter.left_paddle - 1))
-	    projected_vel = (projected_vel[0]*PADDLE_BOUNCE, projected_vel[1]*PADDLE_BOUNCE)
+	    projected_vel = get_projected_vel(collision_opponent_y, other_paddle_frect, trajectory['position'], ball_frect)
 	    return_trajectory = get_ball_trajectory(projected_vel, (paddle_edge, trajectory['position']), other_paddle_edge, table_size[1])
 	    if len(move_getter.previous_opponent_target) >= opponent_target_history:
 		move_getter.previous_opponent_target.pop(0)
@@ -117,6 +104,22 @@ def move_getter(paddle_frect, other_paddle_frect, ball_frect, table_size):
 	return "down"
     else:
 	return "up"
+
+def get_projected_vel(collision_y, paddle_frect, trajectory_position, ball_frect):
+    projected_theta = get_angle(collision_y, paddle_frect.size[1], trajectory_position + 0.5*ball_frect.size[1], not move_getter.left_paddle)
+    projected_vel = [math.cos(projected_theta)*move_getter.ball_vel[0] - \
+	    math.sin(projected_theta)*move_getter.ball_vel[1],
+	    math.sin(projected_theta)*move_getter.ball_vel[0] + \
+		    math.cos(projected_theta)*move_getter.ball_vel[1]]
+    projected_vel[0] = -projected_vel[0]
+    projected_vel = [math.cos(-projected_theta)*projected_vel[0] - \
+	    math.sin(-projected_theta)*projected_vel[0],
+	    math.sin(-projected_theta)*projected_vel[0] + \
+		    math.cos(-projected_theta)*projected_vel[1]]
+    if abs(projected_vel[0]) < 1:
+	projected_vel[0] = 0.95*(2*(not move_getter.left_paddle - 1))
+    projected_vel = (projected_vel[0]*PADDLE_BOUNCE, projected_vel[1]*PADDLE_BOUNCE)
+    return projected_vel
 
 def out_of_reach(paddle_frect, trajectory, me):
     distance_to_ball = abs(paddle_frect.pos[1] + paddle_frect.size[1]*0.5 - trajectory['position'])
@@ -162,14 +165,34 @@ def get_ball_trajectory(ball_vel, ball_pos, paddle_edge, table_height, time = 0,
 	return {'position':projected_y, 'time':time_to_edge + time, 'walls':walls}
 
 def get_possible_positions(trajectory, paddle_frect):
-    # TODO - implement
-    return []
+    possibilities = []
+    if trajectory['position'] < paddle_frect.pos[1]:
+	# ball going above paddle
+	for i in range(paddle_frect.size[1]):
+	    if paddle_frect.pos[1] + i - trajectory['position'] < trajectory['time']:
+		possibilities.append(i)
+    else:
+	for i in range(paddle_frect.size[1]):
+	    if trajectory['position'] - (paddle_frect.pos[1] + i) < trajectory['time']:
+		possibilities.append(i)
+    return possibilities
 
-def get_optimal_target(possible_collision_positions, paddle_frect, other_paddle_frect, ball_vel):
-    # TODO - implement
-    return paddle_frect.pos[1] + paddle_frect.size[1]/2
+def get_optimal_target(possible_collision_positions, trajectory_position, paddle_frect, other_paddle_frect, ball_vel, ball_frect, paddle_edge, other_paddle_edge):
+    best_position = paddle_frect.size[1]/2
+    best_score = 0
+    for possibility in possible_collision_positions:
+	projected_vel = get_projected_vel(possibility, paddle_frect, trajectory_position, ball_frect)
+	predicted_trajectory = get_ball_trajectory(projected_vel, (paddle_edge, trajectory_position), other_paddle_edge, table_height)
+	score = abs(predicted_trajectory['position'] - (other_paddle_frect.pos[1] + other_paddle_frect.size[1]/2)) - predicted_trajectory['time']
+	if score > best_score:
+	    best_position = possibility
+	    best_score = score
+    return paddle_frect.pos[1] + best_position 
 
-def initialize(paddle_frect, their_paddle_frect, table_width):
+def initialize(paddle_frect, their_paddle_frect, table_size):
+    global table_width, table_height
+    table_width = table_size[0]
+    table_height = table_size[1]
     move_getter.left_paddle = paddle_frect.pos[0] < table_width/2
     if move_getter.left_paddle:
 	move_getter.my_edge = paddle_frect.size[0]
