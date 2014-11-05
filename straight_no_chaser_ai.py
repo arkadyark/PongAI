@@ -76,7 +76,7 @@ def move_getter(paddle_frect, other_paddle_frect, ball_frect, table_size):
     if not moving_away:
         trajectory = get_ball_trajectory(move_getter.ball_vel, ball_frect.pos, paddle_edge, table_size[1])
         estimated_ball_pos = trajectory['position'] + ball_frect.size[1] / 2
-	# Check if the ball is out of reach
+        # Check if the ball is out of reach
         if out_of_reach(paddle_frect, trajectory, True):
             # Out of reach, don't bother
             if not turn_number % 10:
@@ -84,10 +84,10 @@ def move_getter(paddle_frect, other_paddle_frect, ball_frect, table_size):
             move_getter.target_y = table_size[1] * 0.5
         else:
             if not turn_number % 1:
-                print "The ball is actually coming to:", estimated_ball_pos, "in", trajectory["time"] 
-	# Get possible places I can hit that ball at
+                print "The ball is actually coming to:", estimated_ball_pos, "in", trajectory["time"]
+                # Get possible places I can hit that ball at
         possible_collision_positions = get_possible_positions(trajectory, paddle_frect)
-	# Optimize over these possible positions
+        # Optimize over these possible positions
         paddle_target_position = get_optimal_target(possible_collision_positions, estimated_ball_pos, paddle_frect,
                                                     other_paddle_frect, move_getter.ball_vel, ball_frect, paddle_edge,
                                                     other_paddle_edge)
@@ -97,8 +97,8 @@ def move_getter(paddle_frect, other_paddle_frect, ball_frect, table_size):
     else:
         trajectory = get_ball_trajectory(move_getter.ball_vel, ball_frect.pos, paddle_edge, table_size[1], 0)
         if not turn_number % 1:
-            print "The ball is actually coming to:", trajectory['position'], "in", trajectory["time"] 
-	# Check if reachable
+            print "The ball is actually coming to:", trajectory['position'], "in", trajectory["time"]
+        # Check if reachable
         if out_of_reach(other_paddle_frect, trajectory, False):
             # Move to middle if point is over
             if not turn_number % 10:
@@ -108,22 +108,21 @@ def move_getter(paddle_frect, other_paddle_frect, ball_frect, table_size):
         else:
             # Assuming opponent continues their trajectory
             collision_opponent_y = other_paddle_frect.pos[1] + move_getter.opponent_vel * trajectory['time']
-	    collision_opponent_y = max(0, min(collision_opponent_y, table_size[1]))
-	    # Get the projected rebound velocity
+            collision_opponent_y = max(0, min(collision_opponent_y, table_size[1]))
+            # Get the projected rebound velocity
             projected_vel = get_projected_vel(collision_opponent_y, other_paddle_frect, trajectory['position'],
                                               ball_frect)
-	    # Get the projected trajectory of the return of the ball
+            # Get the projected trajectory of the return of the ball
             return_trajectory = get_ball_trajectory(projected_vel, (paddle_edge, trajectory['position']),
                                                     other_paddle_edge, table_size[1])
-	    # TODO - put this in a function
+            # TODO - put this in a function
             # Weighted average of opponent trajectory
             if len(move_getter.previous_opponent_target) >= opponent_target_history:
                 move_getter.previous_opponent_target.pop(0)
             move_getter.previous_opponent_target.append(return_trajectory['position'])
-	    # Gets where the return will go on our side
-            return_position = sum(move_getter.previous_opponent_target[i] * history_weights[i] for i in
-                                  range(len(move_getter.previous_opponent_target))) / sum(
-                history_weights[:len(move_getter.previous_opponent_target)])
+            # Gets where the return will go on our side
+            return_position = most_likely_return_position()
+
             if not turn_number % 10:
                 print "I think the opponent will hit it to:", return_position
             paddle_target_position = paddle_frect.pos[1] + paddle_frect.size[1] / 2
@@ -256,9 +255,18 @@ def get_optimal_target(possible_collision_positions, trajectory_position, paddle
     return paddle_frect.pos[1] + best_position
 
 
+def most_likely_return_position():
+    """
+    Returns where the ball is most likely to be returned to
+    Currently returns the average position of the opponent's return hits weighted by the number of turns since then.
+    """
+    return (sum(i * j for i, j in zip(move_getter.previous_opponent_target, history_weights)) /
+            sum(history_weights[:len(move_getter.previous_opponent_target)]))  # normalize sum to 1.
+
+
 def initialize(paddle_frect, their_paddle_frect, table_size):
     """
-    Initialize the game set u by doing the following:
+    Initialize the game set up by doing the following:
     - Initialize the size of the table
     - determine whether we are on the left or right and assign this to move_getter.is_left_paddle
     - assign the variables "my_edge" and "their_edge" to be the x coordinates of the edges.
