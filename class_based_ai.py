@@ -1,6 +1,7 @@
 import math
 
 first_move = True
+ai = None
 
 
 def move_getter(paddle_frect, other_paddle_frect, ball_frect, table_size):
@@ -32,13 +33,13 @@ def move_getter(paddle_frect, other_paddle_frect, ball_frect, table_size):
      |
  y   v
     """
-    global first_move
+    global first_move, ai
 
     if first_move:
-        s = SncAI(paddle_frect, other_paddle_frect, ball_frect, table_size)
+        ai = SncAI(paddle_frect, other_paddle_frect, ball_frect, table_size)
         first_move = False
 
-    return s.get_next_move(paddle_frect, other_paddle_frect, ball_frect, table_size)
+    return ai.get_next_move(paddle_frect, other_paddle_frect, ball_frect, table_size)
 
 
 class SncAI():
@@ -67,7 +68,7 @@ class SncAI():
             self.my_edge = paddle_frect.pos[0]
             self.their_edge = their_paddle_frect.size[0]
 
-        self.previous_ball_pos = None
+        self.previous_ball_pos = (ball_frect.pos[0], ball_frect.pos[1])
         self.ball_vel = [1, 1]
         self.opponent_vel = 0
         self.previous_opponent_vel = [0]
@@ -78,10 +79,35 @@ class SncAI():
         self.paddle_frect = paddle_frect
         self.their_paddle_frect = their_paddle_frect
         self.ball_frect = ball_frect
+        # Fine, I guess we should be prepared for the table dimensions to change
+        # during the game. It's Guerzhoy, after all
         self.table_width = table_size[0]
         self.table_height = table_size[1]
 
-        #Actually return a move here.
+        # Update the velocity of the ball and related parameters
+        self.ball_vel = self.get_vel(ball_frect.pos)
+        self.moving_away = (self.is_left_paddle and (self.ball_vel[0] > 0) or \
+                            not (self.is_left_paddle and (self.ball_vel[0] < 0)))
+
+
+        if self.moving_away:
+            # Strategy when the ball is heading to the opponent - go where
+            # it looks like they're aiming
+        	self.paddle_target = self.get_centre(paddle_frect)
+
+        else:
+            # Strategy when the ball is heading towards us
+			self.paddle_target = self.get_centre(paddle_frect)
+
+        # Return the move based on parameters set earlier
+        return "up" if self.paddle_target > self.get_centre(ball_frect) else "down"
+
+
+    def get_centre(self, frect):
+        '''
+        Helper function that returns the y-coordinate of the centre of an frect.
+        '''
+        return frect.pos[1] + 0.5*frect.size[1]
 
     def get_vel(self, current_pos):
         """

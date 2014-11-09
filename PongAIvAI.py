@@ -62,8 +62,8 @@ class Paddle:
 
 
     def move(self, enemy_frect, ball_frect, table_size):
-        #direction = self.move_getter(self.frect.copy(), enemy_frect.copy(), ball_frect.copy(), tuple(table_size))
-        direction = timeout(self.move_getter, (self.frect.copy(), enemy_frect.copy(), ball_frect.copy(), tuple(table_size)), {}, 0.001)
+        direction = self.move_getter(self.frect.copy(), enemy_frect.copy(), ball_frect.copy(), tuple(table_size))
+		#direction = timeout(self.move_getter, (self.frect.copy(), enemy_frect.copy(), ball_frect.copy(), tuple(table_size)), {}, 0.001)
         if direction == "up":
             self.frect.move_ip(0, -self.speed)
         elif direction == "down":
@@ -327,13 +327,13 @@ def init_game(mode):
 
     f = open("results.txt", "a")
 
-    import straight_no_chaser_ai_v1, straight_no_chaser_ai, chaser_ai
+    import class_based_ai, chaser_ai
     if mode == '1':
         paddles[0].move_getter = directions_from_input
-        paddles[1].move_getter = straight_no_chaser_ai.move_getter
+        paddles[1].move_getter = class_based_ai.move_getter
     if mode == '2':
         paddles[0].move_getter = chaser_ai.chaser
-        paddles[1].move_getter = straight_no_chaser_ai.move_getter
+        paddles[1].move_getter = class_baled_ai.move_getter
     game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, score_to_win)
     pygame.quit()
 
