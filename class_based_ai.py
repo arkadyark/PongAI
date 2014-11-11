@@ -63,17 +63,19 @@ class SncAI(object):
         self.table_height = table_size[1]
         self.is_left_paddle = paddle_frect.pos[0] < self.table_width / 2
         if self.is_left_paddle:
-            self.my_edge = paddle_frect.size[0]
-            self.their_edge = their_paddle_frect.pos[0]
+            self.my_edge = paddle_frect.size[0] + ball_frect.size[0]
+            self.their_edge = their_paddle_frect.pos[0] - ball_frect.size[0]
         else:
-            self.my_edge = paddle_frect.pos[0]
-            self.their_edge = their_paddle_frect.size[0]
+            self.my_edge = paddle_frect.pos[0] - ball_frect.size[0]
+            self.their_edge = their_paddle_frect.size[0] + ball_frect.size[0]
 
         self.previous_ball_pos = (ball_frect.pos[0], ball_frect.pos[1])
         self.ball_vel = [1, 1]
         self.opponent_vel = 0
-        self.previous_opponent_vel = [0]
-        self.previous_opponent_target = [0]  # stores all of the opponent's past targets, used for history analysis
+        self.previous_opponent_y = their_paddle_frect.pos[1]
+        self.previous_opponent_vels = []
+        self.previous_opponent_targets = [0]  # stores all of the opponent's past targets, used for history analysis
+
         self.moving_away = None  # whether the ball is moving towards or away from us
 
         self.visual_debugger = VisualDebugger(table_size)
@@ -86,6 +88,15 @@ class SncAI(object):
         self.table_width = table_size[0]
         self.table_height = table_size[1]
 
+        # Update the velocity of the opponent
+        if len(self.previous_opponent_vels) > SncAI.opponent_vel_history:
+            self.previous_opponent_vels.pop(0)
+        actual_opponent_vel = their_paddle_frect.pos[1] - self.previous_opponent_y
+        self.previous_opponent_y = their_paddle_frect.pos[1]
+        self.opponent_vel = (sum(self.previous_opponent_vels) + actual_opponent_vel) / \
+                            float(len(self.previous_opponent_vels) + 1)
+        self.previous_opponent_vels.append(actual_opponent_vel)
+
         # Update the velocity of the ball and related parameters
         self.ball_vel = self.get_vel(ball_frect.pos)
         self.previous_ball_pos = (ball_frect.pos[0], ball_frect.pos[1])
@@ -97,9 +108,19 @@ class SncAI(object):
             # Strategy when the ball is heading to the opponent - go where
             # it looks like they're aiming
             self.paddle_target = self.get_centre(paddle_frect)
-            self.target_y = self.table_height*0.5
+            
             projected_impact = self.get_ball_trajectory(self.ball_vel, self.ball_frect.pos,
                                                         self.their_edge)
+            projected_opponent_pos = their_paddle_frect.pos[1] + self.opponent_vel*projected_impact['time']
+            self.visual_debugger.mark(VisualDebugger.POINT, (0, projected_opponent_pos), 0x00FF00)
+            return_vel = self.get_projected_vel(
+                projected_opponent_pos, projected_impact['position'])
+            projected_return_point = self.get_ball_trajectory(return_vel,
+                                                              (self.their_edge, projected_impact['position']),
+                                                              self.my_edge)['position']
+            self.target_y = projected_return_point
+            self.visual_debugger.mark(VisualDebugger.POINT, (table_size[0], projected_return_point), 0x00FF00)
+
         else:
             # Strategy when the ball is heading towards us
             self.paddle_target = self.get_centre(paddle_frect)
@@ -210,9 +231,9 @@ class SncAI(object):
         # TODO - fix
         ball_vel = list(ball_vel)  # Copying ball_vel deliberately so I don't mess stuff up.
         if ball_vel[0] == 0:
-            ball_vel[0] = 0.0001
+            ball_vel[0] = 1
         if ball_vel[1] == 0:
-            ball_vel[1] = 0.0001
+            ball_vel[1] = 1
 
         time_to_edge = math.ceil((paddle_edge - ball_pos[0]) / ball_vel[0])
         time_to_top = -ball_pos[1] / ball_vel[1]
