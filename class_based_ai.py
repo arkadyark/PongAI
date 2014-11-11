@@ -88,27 +88,30 @@ class SncAI(object):
 
         # Update the velocity of the ball and related parameters
         self.ball_vel = self.get_vel(ball_frect.pos)
-        self.moving_away = (
-        self.is_left_paddle and (self.ball_vel[0] > 0) or not (self.is_left_paddle and (self.ball_vel[0] < 0)))
+        self.previous_ball_pos = (ball_frect.pos[0], ball_frect.pos[1])
 
+        self.moving_away = (
+        (self.is_left_paddle and (self.ball_vel[0] > 0)) or (not self.is_left_paddle and (self.ball_vel[0] < 0)))
 
         if self.moving_away:
             # Strategy when the ball is heading to the opponent - go where
             # it looks like they're aiming
             self.paddle_target = self.get_centre(paddle_frect)
-
+            self.target_y = self.table_height*0.5
             projected_impact = self.get_ball_trajectory(self.ball_vel, self.ball_frect.pos,
-                                                        self.their_paddle_frect.pos[0])
+                                                        self.their_edge)
         else:
             # Strategy when the ball is heading towards us
             self.paddle_target = self.get_centre(paddle_frect)
-            projected_impact = self.get_ball_trajectory(self.ball_vel, self.ball_frect.pos, self.paddle_frect.pos[0])
+            projected_impact = self.get_ball_trajectory(self.ball_vel, self.ball_frect.pos, self.my_edge)
+            self.target_y = projected_impact['position']
 
         self.visual_debugger.mark(VisualDebugger.POINT, (0, projected_impact['position']), 0xFF0000)
         self.visual_debugger.mark(VisualDebugger.POINT, (table_size[0], projected_impact['position']), 0xFF0000)
 
         # Return the move based on parameters set earlier
-        return "up" if self.paddle_target > self.get_centre(ball_frect) else "down"
+        #print self.target_y
+        return "up" if self.paddle_target > self.target_y else "down"
 
 
     def get_centre(self, frect):
