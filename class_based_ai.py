@@ -1,4 +1,5 @@
 import math
+from visualdebugger import VisualDebugger
 
 first_move = True
 ai = None
@@ -42,7 +43,7 @@ def move_getter(paddle_frect, other_paddle_frect, ball_frect, table_size):
     return ai.get_next_move(paddle_frect, other_paddle_frect, ball_frect, table_size)
 
 
-class SncAI():
+class SncAI(object):
     ### STATIC VARIABLES ###
     MAX_ANGLE = 45  # Dangerous, he might change it
     PADDLE_BOUNCE = 1.2  # Ditto
@@ -75,29 +76,36 @@ class SncAI():
         self.previous_opponent_target = [0]  # stores all of the opponent's past targets, used for history analysis
         self.moving_away = None  # whether the ball is moving towards or away from us
 
+        self.visual_debugger = VisualDebugger(table_size)
+
     def get_next_move(self, paddle_frect, their_paddle_frect, ball_frect, table_size):
         self.paddle_frect = paddle_frect
         self.their_paddle_frect = their_paddle_frect
         self.ball_frect = ball_frect
-        # Fine, I guess we should be prepared for the table dimensions to change
-        # during the game. It's Guerzhoy, after all
+        # Being ready for the table dimensions to change
         self.table_width = table_size[0]
         self.table_height = table_size[1]
 
         # Update the velocity of the ball and related parameters
         self.ball_vel = self.get_vel(ball_frect.pos)
-        self.moving_away = (self.is_left_paddle and (self.ball_vel[0] > 0) or \
-                            not (self.is_left_paddle and (self.ball_vel[0] < 0)))
+        self.moving_away = (
+        self.is_left_paddle and (self.ball_vel[0] > 0) or not (self.is_left_paddle and (self.ball_vel[0] < 0)))
 
 
         if self.moving_away:
             # Strategy when the ball is heading to the opponent - go where
             # it looks like they're aiming
-        	self.paddle_target = self.get_centre(paddle_frect)
+            self.paddle_target = self.get_centre(paddle_frect)
 
+            projected_impact = self.get_ball_trajectory(self.ball_vel, self.ball_frect.pos,
+                                                        self.their_paddle_frect.pos[0])
         else:
             # Strategy when the ball is heading towards us
-			self.paddle_target = self.get_centre(paddle_frect)
+            self.paddle_target = self.get_centre(paddle_frect)
+            projected_impact = self.get_ball_trajectory(self.ball_vel, self.ball_frect.pos, self.paddle_frect.pos[0])
+
+        self.visual_debugger.mark(VisualDebugger.POINT, (0, projected_impact['position']), 0xFF0000)
+        self.visual_debugger.mark(VisualDebugger.POINT, (table_size[0], projected_impact['position']), 0xFF0000)
 
         # Return the move based on parameters set earlier
         return "up" if self.paddle_target > self.get_centre(ball_frect) else "down"
@@ -191,12 +199,22 @@ class SncAI():
         """
         Return the y coordinate that the ball will hit when it reaches the edge
         that it's moving towards
+
+        :return: a dictionary with keys position, time and walls. Position is the y position along the edge, time is
+        the number of ticks until you hit the edge and walls is the number of walls you've hit.
         """
         # THIS IS A PROBLEM
         # TODO - fix
+        ball_vel = list(ball_vel)  # Copying ball_vel deliberately so I don't mess stuff up.
+        if ball_vel[0] == 0:
+            ball_vel[0] = 0.0001
+        if ball_vel[1] == 0:
+            ball_vel[1] = 0.0001
+
         time_to_edge = math.ceil((paddle_edge - ball_pos[0]) / ball_vel[0])
         time_to_top = -ball_pos[1] / ball_vel[1]
         time_to_bottom = (self.table_height - ball_pos[1]) / ball_vel[1]
+
         time_to_wall = math.ceil(max(time_to_top, time_to_bottom))
         if time_to_wall < time_to_edge:
             # Headed for a wall
