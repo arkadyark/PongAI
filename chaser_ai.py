@@ -32,4 +32,5 @@ def chaser(paddle_frect, other_paddle_frect, ball_frect, table_size):
         return "down"
     else:
         return "up"
-    
+
+chaser.name = "Chaser"

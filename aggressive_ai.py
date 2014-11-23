@@ -63,11 +63,11 @@ class SncAI(object):
         self.table_height = table_size[1]
         self.is_left_paddle = paddle_frect.pos[0] < self.table_width / 2
         if self.is_left_paddle:
-            self.my_edge = paddle_frect.size[0] + ball_frect.size[0]
-            self.their_edge = their_paddle_frect.pos[0] - ball_frect.size[0]
+            self.my_edge = paddle_frect.pos[0] + paddle_frect.size[0] + ball_frect.size[0] / 2
+            self.their_edge = their_paddle_frect.pos[0] - ball_frect.size[0] / 2
         else:
-            self.my_edge = paddle_frect.pos[0] - ball_frect.size[0]
-            self.their_edge = their_paddle_frect.size[0] + ball_frect.size[0]
+            self.my_edge = paddle_frect.pos[0] - ball_frect.size[0] / 2
+            self.their_edge = their_paddle_frect.pos[0] + their_paddle_frect.size[0] + ball_frect.size[0] / 2
 
         self.previous_ball_pos = (ball_frect.pos[0], ball_frect.pos[1])
         self.ball_vel = [1, 1]
@@ -112,27 +112,38 @@ class SncAI(object):
             projected_impact = self.get_ball_trajectory(self.ball_vel, self.ball_frect.pos,
                                                         self.their_edge)
             projected_opponent_pos = their_paddle_frect.pos[1] + self.opponent_vel*projected_impact['time']
-            self.visual_debugger.mark(VisualDebugger.POINT, (0, projected_opponent_pos), 0x00FF00)
+            self.visual_debugger.mark(VisualDebugger.POINT, (5, projected_opponent_pos), 0x00FF00)
             return_vel = self.get_projected_vel(
                 projected_opponent_pos, projected_impact['position'])
             projected_return_point = self.get_ball_trajectory(return_vel,
                                                               (self.their_edge, projected_impact['position']),
                                                               self.my_edge)['position']
             self.target_y = projected_return_point
-            self.visual_debugger.mark(VisualDebugger.POINT, (table_size[0], projected_return_point), 0x00FF00)
+            self.visual_debugger.mark(VisualDebugger.POINT, (table_size[0] - 5, projected_return_point), 0x00FF00)
 
         else:
             # Strategy when the ball is heading towards us
             self.paddle_target = self.get_centre(paddle_frect)
             projected_impact = self.get_ball_trajectory(self.ball_vel, self.ball_frect.pos, self.my_edge)
-            self.target_y = projected_impact['position']
+            self.target_y = self.get_optimal_target(projected_impact)
+            self.visual_debugger.mark(VisualDebugger.POINT, (self.my_edge, self.target_y), 0x0000FF)
 
-        self.visual_debugger.mark(VisualDebugger.POINT, (0, projected_impact['position']), 0xFF0000)
-        self.visual_debugger.mark(VisualDebugger.POINT, (table_size[0], projected_impact['position']), 0xFF0000)
+        self.visual_debugger.mark(VisualDebugger.POINT, (self.my_edge, projected_impact['position']), 0xFF0000)
+        self.visual_debugger.mark(VisualDebugger.POINT, (self.their_edge, projected_impact['position']), 0xFF0000)
+
+        if projected_impact['time'] < 10:
+            print (projected_impact['time'])
+
 
         # Return the move based on parameters set earlier
         #print self.target_y
-        return "up" if self.paddle_target > self.target_y else "down"
+        if self.paddle_frect.pos[1] > self.target_y:
+            return "up"
+        elif self.paddle_frect.pos[1] < self.target_y:
+            return "down"
+        else:
+            return "stay still"  # not a command, but does nothing.
+        #return "up" if self.paddle_target > self.target_y else "down"
 
 
     def get_centre(self, frect):
@@ -256,37 +267,36 @@ class SncAI(object):
 
     def get_possible_positions(self, trajectory):
         """
-        Return the possible y positions along the paddle that could potentially hit the ball
+        Return the possible y positions that could potentially hit the ball
         """
         possibilities = []
-        if trajectory['position'] < self.paddle_frect.pos[1]:
-            # ball going above paddle
-            for i in range(self.paddle_frect.size[1]):
-                if self.paddle_frect.pos[1] + i - trajectory['position'] < trajectory['time']:
-                    possibilities.append(i)
-        else:
-            for i in range(self.paddle_frect.size[1]):
-                if trajectory['position'] - (self.paddle_frect.pos[1] + i) < trajectory['time']:
-                    possibilities.append(i)
+        for i in xrange(self.paddle_frect.size[1]):
+            if (abs(self.paddle_frect.pos[1] - trajectory['position'] + i) < trajectory['time'] + 2
+                # added 2 to account for inaccuracies in time and because you can hit with the side of the paddle.
+                and 0 <= trajectory['position'] - i) <= self.table_height - self.paddle_frect.size[1]:
+                possibilities.append(trajectory['position'] - i)
+
         return possibilities
 
-    def get_optimal_target(self, possible_collision_positions, trajectory_position, paddle_frect, other_paddle_frect,
-                           paddle_edge, other_paddle_edge):
+    def get_optimal_target(self, projected_trajectory):
         """
         Return the best point along the paddle with which to hit the ball
         """
-        best_position = paddle_frect.size[1] / 2
-        best_score = 0
-        for possibility in possible_collision_positions:
-            projected_vel = self.get_projected_vel(possibility, trajectory_position)
-            predicted_trajectory = self.get_ball_trajectory(projected_vel, (paddle_edge, trajectory_position),
-                                                            other_paddle_edge)
-            score = abs(
-                predicted_trajectory['position'] - (other_paddle_frect.pos[1] + other_paddle_frect.size[1] / 2)) - \
+        best_position = self.paddle_frect.pos[1] + self.paddle_frect.size[1] / 2
+        best_score = -10000
+        for possibility in self.get_possible_positions(projected_trajectory):
+            projected_vel = self.get_projected_vel(possibility, projected_trajectory['position'])
+            predicted_trajectory = self.get_ball_trajectory(projected_vel, (self.my_edge, projected_trajectory['position']),
+                                                            self.their_edge)
+            score = abs(predicted_trajectory['position'] - (self.their_paddle_frect.pos[1] + self.their_paddle_frect.size[1] / 2)) - \
                     predicted_trajectory['time']
-            if score > best_score:
+            if score >= best_score:
                 best_position = possibility
                 best_score = score
-        return paddle_frect.pos[1] + best_position
 
-move_getter.name = "Class based ai"
+        if best_score == -10000:
+            best_position = self.table_height / 2  # default position: middle of table
+        return best_position
+
+
+move_getter.name = "class based chaser AI with aggression"  # yes, I'm giving the function a property, but this is the best way to do it.

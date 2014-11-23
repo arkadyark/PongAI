@@ -333,7 +333,7 @@ def init_game(mode):
 	paddles[0].move_getter = directions_from_input
 	paddles[1].move_getter = straight_no_chaser_ai.move_getter
     if mode == '2':
-	paddles[0].move_getter = chaser_ai.chaser 
+	paddles[0].move_getter = chaser_ai.chaser
 	paddles[1].move_getter = straight_no_chaser_ai.move_getter
     game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, score_to_win)
     pygame.quit()

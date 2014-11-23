@@ -1,5 +1,5 @@
 # PongAIvAI
-#   Author: Michael Guerzhoy, 2014. 
+# Author: Michael Guerzhoy, 2014.
 #   http://www.cs.toronto.edu/~guerzhoy/
 #   Email: guerzhoy at cs.toronto.edu
 #
@@ -25,7 +25,7 @@ from pygame.locals import *
 
 import math
 
-import class_based_ai, chaser_ai
+import aggressive_ai, chaser_ai, class_based_ai
 
 
 white = [255, 255, 255]
@@ -136,6 +136,10 @@ class Ball:
                 v = [math.cos(-theta) * v[0] - math.sin(-theta) * v[1],
                      math.sin(-theta) * v[0] + math.cos(-theta) * v[1]]
 
+                if v[0] * (2 * paddle.facing - 1) < 0:  # Guerzhoy's first change: add this block of code
+                    v[1] = (v[1] / abs(v[1])) * math.sqrt(v[0] ** 2 + v[1] ** 2)
+                    v[0] = 0  #will get fixed by the next part
+
                 if (abs(v[0]) < 1):
                     v[0] = .95 * (2 * paddle.facing - 1)
 
@@ -220,12 +224,8 @@ def render(screen, paddles, ball, score, table_size):
     screen.blit(score_font.render(str(score[0]), True, white), [int(0.4 * table_size[0]) - 8, 0])
     screen.blit(score_font.render(str(score[1]), True, white), [int(0.6 * table_size[0]) - 8, 0])
 
-    # print (type(class_based_ai.ai))
-    #print (class_based_ai.ai.move_getter)
-
-    if class_based_ai.ai is not None:
-        class_based_ai.ai.visual_debugger.draw_things(screen)
-        #class_based_ai.ai.visual_debugger.draw_things(screen)
+    if aggressive_ai.ai is not None:
+        aggressive_ai.ai.visual_debugger.draw_things(screen)
     else:
         print ('Drawing debugger failed')
 
@@ -257,6 +257,7 @@ def game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, sco
                 screen.blit(font.render("Left scores!", True, white, black), [0, 32])
             else:
                 screen.blit(font.render("Right scores!", True, white, black), [int(table_size[0] / 2 + 20), 32])
+            print(score)
 
             pygame.display.flip()
             clock.tick(turn_wait_rate)
@@ -274,28 +275,33 @@ def game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, sco
         clock.tick(clock_rate)
 
     f = open('results.txt', 'a')
-    to_write = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()) + "\nScore for the left player " + str(
-        score[0]) + "\nScore for the" + \
-               " right player " + str(score[1]) + "\n\n"
+
+    to_write = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()) + "\n"
+    to_write += "Score for the left player {} ({})\n".format(score[0], paddles[0].name)
+    to_write += "Score for the right player {}: ({})\n".format(score[1], paddles[1].name)
+    to_write += "left {}%; right {}% \n\n\n".format(float(score[0]) / (score[0] + score[1]) * 100, float(score[1]) / (score[0] + score[1]) * 100)
     f.write(to_write)
 
     font = pygame.font.Font(None, 64)
     if score[0] > score[1]:
         screen.blit(font.render("Left wins!", True, white, black), [24, 32])
+        print("The left player won")
     else:
         screen.blit(font.render("Right wins!", True, white, black), [24, 32])
+        print("The right player won")
+    print("The score is: left: {} \tright: {}".format(score[0], score[1]))
     pygame.display.flip()
     clock.tick(2)
 
     pygame.event.pump()
     while any(pygame.key.get_pressed()):
         pygame.event.pump()
-        clock.tick(30)
+        clock.tick (30)
 
     return
 
 
-def init_game(mode):
+def init_game():
     table_size = (440, 280)
     paddle_size = (10, 70)
     ball_size = (15, 15)
@@ -309,7 +315,7 @@ def init_game(mode):
     timeout = .200
     clock_rate = 80
     turn_wait_rate = 3
-    score_to_win = 100
+    score_to_win = 1000
 
     screen = pygame.display.set_mode(table_size)
     pygame.display.set_caption('PongAIvAI')
@@ -320,21 +326,25 @@ def init_game(mode):
 
     f = open("results.txt", "a")
 
-    if mode == '1':
-        paddles[0].move_getter = chaser_ai.chaser
-        paddles[1].move_getter = class_based_ai.move_getter
-    if mode == '2':
-        paddles[0].move_getter = chaser_ai.chaser
-        paddles[1].move_getter = class_based_ai.move_getter
+    paddles[0].move_getter = class_based_ai.move_getter #chaser_ai.chaser
+    paddles[1].move_getter = aggressive_ai.move_getter
+
+    try:
+        paddles[0].name = paddles[0].move_getter.name
+    except Exception:
+        print("If you give the function a name, it will display in the results")
+        paddles[0].name = "Unnamed player"
+
+    try:
+        paddles[1].name = paddles[1].move_getter.name
+    except e:
+        print("If you give the function a name, it will display in the results")
+        paddles[1].name = "Unnamed player"
+
     game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, score_to_win)
     pygame.quit()
 
 
 if __name__ == '__main__':
-    try:
-        mode = sys.argv[1]
-        assert (mode in ('1', '2'))
-    except:
-        mode = '1'
     pygame.init()
-    init_game(mode)
+    init_game()     # Guerzhoy's second change: make init_game no longer take a "mode" parameter
