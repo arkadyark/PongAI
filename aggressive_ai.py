@@ -63,11 +63,11 @@ class SncAI(object):
         self.table_height = table_size[1]
         self.is_left_paddle = paddle_frect.pos[0] < self.table_width / 2
         if self.is_left_paddle:
-            self.my_edge = paddle_frect.pos[0] + paddle_frect.size[0] + ball_frect.size[0] / 2
-            self.their_edge = their_paddle_frect.pos[0] - ball_frect.size[0] / 2
+            self.my_edge = paddle_frect.pos[0] + paddle_frect.size[0]
+            self.their_edge = their_paddle_frect.pos[0]
         else:
-            self.my_edge = paddle_frect.pos[0] - ball_frect.size[0] / 2
-            self.their_edge = their_paddle_frect.pos[0] + their_paddle_frect.size[0] + ball_frect.size[0] / 2
+            self.my_edge = paddle_frect.pos[0]
+            self.their_edge = their_paddle_frect.pos[0] + their_paddle_frect.size[0]
 
         self.previous_ball_pos = (ball_frect.pos[0], ball_frect.pos[1])
         self.ball_vel = [1, 1]
@@ -130,9 +130,6 @@ class SncAI(object):
 
         self.visual_debugger.mark(VisualDebugger.POINT, (self.my_edge, projected_impact['position']), 0xFF0000)
         self.visual_debugger.mark(VisualDebugger.POINT, (self.their_edge, projected_impact['position']), 0xFF0000)
-
-        if projected_impact['time'] < 10:
-            print (projected_impact['time'])
 
 
         # Return the move based on parameters set earlier
