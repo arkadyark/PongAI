@@ -64,9 +64,9 @@ class SncAI(object):
         self.is_left_paddle = paddle_frect.pos[0] < self.table_width / 2
         if self.is_left_paddle:
             self.my_edge = paddle_frect.pos[0] + paddle_frect.size[0]
-            self.their_edge = their_paddle_frect.pos[0]
+            self.their_edge = their_paddle_frect.pos[0] - ball_frect.size[0]
         else:
-            self.my_edge = paddle_frect.pos[0]
+            self.my_edge = paddle_frect.pos[0] - ball_frect.size[0]
             self.their_edge = their_paddle_frect.pos[0] + their_paddle_frect.size[0]
 
         self.previous_ball_pos = (ball_frect.pos[0], ball_frect.pos[1])
@@ -235,8 +235,6 @@ class SncAI(object):
         :return: a dictionary with keys position, time and walls. Position is the y position along the edge, time is
         the number of ticks until you hit the edge and walls is the number of walls you've hit.
         """
-        # THIS IS A PROBLEM
-        # TODO - fix
         ball_vel = list(ball_vel)  # Copying ball_vel deliberately so I don't mess stuff up.
         if ball_vel[0] == 0:
             ball_vel[0] = 1
@@ -260,6 +258,7 @@ class SncAI(object):
         else:
             # Headed for a paddle (or edge)
             projected_y = ball_pos[1] + time_to_edge * ball_vel[1]
+            assert projected_y > 0
             return {'position': projected_y, 'time': time_to_edge + time, 'walls': walls}
 
     def get_possible_positions(self, trajectory):
@@ -267,12 +266,11 @@ class SncAI(object):
         Return the possible y positions that could potentially hit the ball
         """
         possibilities = []
-        for i in xrange(self.paddle_frect.size[1]):
-            if (abs(self.paddle_frect.pos[1] - trajectory['position'] + i) < trajectory['time'] + 2
-                # added 2 to account for inaccuracies in time and because you can hit with the side of the paddle.
-                and 0 <= trajectory['position'] - i) <= self.table_height - self.paddle_frect.size[1]:
-                possibilities.append(trajectory['position'] - i)
-
+        min_possibility = max(0, int(trajectory['position'] - self.paddle_frect.size[1]))
+        max_possibility = int(min(self.table_height - self.paddle_frect.size[1], trajectory['position']))
+        for i in range(min_possibility, max_possibility):
+            if abs(i - self.paddle_frect.pos[1]) < trajectory['time'] + 1:
+                possibilities.append(i)
         return possibilities
 
     def get_optimal_target(self, projected_trajectory):
