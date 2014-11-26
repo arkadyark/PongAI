@@ -1,11 +1,10 @@
 import math
-from visualdebugger import VisualDebugger
 
 first_move = True
 ai = None
 
 
-def move_getter(paddle_frect, other_paddle_frect, ball_frect, table_size):
+def pong_ai(paddle_frect, other_paddle_frect, ball_frect, table_size):
     """
     return "up" or "down", depending on which way the paddle should go to
     align its centre with the centre of the ball, assuming the ball will
@@ -80,8 +79,6 @@ class SncAI(object):
 
         self.moving_away = None  # whether the ball is moving towards or away from us
 
-        self.visual_debugger = VisualDebugger(table_size)
-
     def get_next_move(self, paddle_frect, their_paddle_frect, ball_frect, table_size):
         self.paddle_frect = paddle_frect
         self.their_paddle_frect = their_paddle_frect
@@ -127,19 +124,15 @@ class SncAI(object):
         else:
             # Strategy when the ball is heading towards us
             projected_trajectory = self.get_ball_trajectory(self.ball_vel, self.ball_frect.pos, self.my_edge)
-            self.visual_debugger.mark(VisualDebugger.POINT, (self.my_edge, projected_trajectory['position']), 0x00FFFF)
             possibilities = self.get_possible_positions(projected_trajectory)
             for possibility in possibilities:
-                self.visual_debugger.mark(VisualDebugger.POINT, (self.my_edge, possibility), 0x00FF00)
                 projected_vel = self.get_projected_vel(possibility, projected_trajectory['position'])
                 predicted_trajectory = self.get_ball_trajectory(projected_vel, (self.my_edge, projected_trajectory['position']),
                                                             self.their_wall)
-                if 0 <= predicted_trajectory['position'] <= self.table_height:
-                    self.visual_debugger.mark(VisualDebugger.POINT, (self.their_wall, predicted_trajectory['position']), 0x00FF00)
             if projected_trajectory['walls'] > 1 or projected_trajectory['time'] > 3*self.paddle_frect.size[1] / 2:
                 self.target_y = projected_trajectory['position'] - self.paddle_frect.size[1] / 2
             else:
-                self.target_y, aiming_for = self.get_optimal_target(projected_trajectory)
+                self.target_y = self.get_optimal_target(projected_trajectory)
 
 
         # Return the move based on parameters set earlier
@@ -302,10 +295,4 @@ class SncAI(object):
                 best_position = projected_trajectory['position']
             else:
                 best_position = self.table_height / 2 - self.paddle_frect.size[1] / 2
-        try:
-            return best_position, predicted_trajectory['position']
-        except:
-            return best_position, 0
-
-
-move_getter.name = "class based chaser AI with aggression"  # yes, I'm giving the function a property, but this is the best way to do it.
+        return best_position

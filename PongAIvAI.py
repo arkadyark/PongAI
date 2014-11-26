@@ -25,7 +25,7 @@ from pygame.locals import *
 
 import math
 
-import aggressive_ai, chaser_ai, class_based_ai
+import aggressive_ai, chaser_ai, class_based_ai, TriPhaser
 
 
 white = [255, 255, 255]
@@ -226,8 +226,6 @@ def render(screen, paddles, ball, score, table_size):
 
     if aggressive_ai.ai is not None:
         aggressive_ai.ai.visual_debugger.draw_things(screen)
-    else:
-        print ('Drawing debugger failed')
 
     pygame.display.flip()
 
@@ -296,7 +294,7 @@ def game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, sco
     pygame.event.pump()
     while any(pygame.key.get_pressed()):
         pygame.event.pump()
-        clock.tick (30)
+        clock.tick (10)
 
     return
 
@@ -326,8 +324,8 @@ def init_game():
 
     f = open("results.txt", "a")
 
-    paddles[0].move_getter = class_based_ai.move_getter #chaser_ai.chaser
-    paddles[1].move_getter = aggressive_ai.move_getter
+    paddles[1].move_getter = aggressive_ai.move_getter #chaser_ai.chaser
+    paddles[0].move_getter = chaser_ai.chaser
 
     try:
         paddles[0].name = paddles[0].move_getter.name

@@ -187,3 +187,9 @@ Score for the right player 1000: (class based chaser AI with aggression)
 left 13.7931034483%; right 86.2068965517% 
 
 
+2014-11-26 09:38:06
+Score for the left player 216 (Chaser)
+Score for the right player 1000: (Class based ai)
+left 17.7631578947%; right 82.2368421053% 
+
+

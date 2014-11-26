@@ -1,5 +1,4 @@
 import math
-from visualdebugger import VisualDebugger
 
 first_move = True
 ai = None
@@ -63,11 +62,11 @@ class SncAI(object):
         self.table_height = table_size[1]
         self.is_left_paddle = paddle_frect.pos[0] < self.table_width / 2
         if self.is_left_paddle:
-            self.my_edge = paddle_frect.size[0] + ball_frect.size[0]
+            self.my_edge = paddle_frect.pos[0] + paddle_frect.size[0]
             self.their_edge = their_paddle_frect.pos[0] - ball_frect.size[0]
         else:
             self.my_edge = paddle_frect.pos[0] - ball_frect.size[0]
-            self.their_edge = their_paddle_frect.size[0] + ball_frect.size[0]
+            self.their_edge = their_paddle_frect.size[0] + their_paddle_frect.size[0]
 
         self.previous_ball_pos = (ball_frect.pos[0], ball_frect.pos[1])
         self.ball_vel = [1, 1]
@@ -78,7 +77,6 @@ class SncAI(object):
 
         self.moving_away = None  # whether the ball is moving towards or away from us
 
-        self.visual_debugger = VisualDebugger(table_size)
 
     def get_next_move(self, paddle_frect, their_paddle_frect, ball_frect, table_size):
         self.paddle_frect = paddle_frect
@@ -112,26 +110,21 @@ class SncAI(object):
             projected_impact = self.get_ball_trajectory(self.ball_vel, self.ball_frect.pos,
                                                         self.their_edge)
             projected_opponent_pos = their_paddle_frect.pos[1] + self.opponent_vel*projected_impact['time']
-            self.visual_debugger.mark(VisualDebugger.POINT, (0, projected_opponent_pos), 0x00FF00)
             return_vel = self.get_projected_vel(
                 projected_opponent_pos, projected_impact['position'])
             projected_return_point = self.get_ball_trajectory(return_vel,
                                                               (self.their_edge, projected_impact['position']),
                                                               self.my_edge)['position']
             self.target_y = projected_return_point
-            self.visual_debugger.mark(VisualDebugger.POINT, (table_size[0], projected_return_point), 0x00FF00)
 
         else:
             # Strategy when the ball is heading towards us
-            self.paddle_target = self.get_centre(paddle_frect)
+            self.paddle_target = self.get_centre(paddle_frect) - self.paddle_frect.size[1]*0.12*((self.ball_frect.pos[1] > self.table_height / 2)*2 - 1)
             projected_impact = self.get_ball_trajectory(self.ball_vel, self.ball_frect.pos, self.my_edge)
             self.target_y = projected_impact['position']
 
-        self.visual_debugger.mark(VisualDebugger.POINT, (0, projected_impact['position']), 0xFF0000)
-        self.visual_debugger.mark(VisualDebugger.POINT, (table_size[0], projected_impact['position']), 0xFF0000)
 
         # Return the move based on parameters set earlier
-        #print self.target_y
         return "up" if self.paddle_target > self.target_y else "down"
 
 
@@ -169,11 +162,11 @@ class SncAI(object):
                          math.cos(projected_theta) * self.ball_vel[1]]
         projected_vel[0] = -projected_vel[0]
         projected_vel = [math.cos(-projected_theta) * projected_vel[0] -
-                         math.sin(-projected_theta) * projected_vel[0],
+                         math.sin(-projected_theta) * projected_vel[1],
                          math.sin(-projected_theta) * projected_vel[0] +
                          math.cos(-projected_theta) * projected_vel[1]]
         if abs(projected_vel[0]) < 1:
-            projected_vel[0] = 0.95 * (2 * (not self.is_left_paddle - 1))
+            projected_vel[0] = 0.95 * ((2 * (not self.is_left_paddle)) - 1)
         projected_vel = (projected_vel[0] * SncAI.PADDLE_BOUNCE, projected_vel[1] * SncAI.PADDLE_BOUNCE)
         return projected_vel
 
@@ -252,6 +245,8 @@ class SncAI(object):
         else:
             # Headed for a paddle (or edge)
             projected_y = ball_pos[1] + time_to_edge * ball_vel[1]
+            if not 0 < projected_y < self.table_height:
+                projected_y = self.table_height/2
             return {'position': projected_y, 'time': time_to_edge + time, 'walls': walls}
 
     def get_possible_positions(self, trajectory):
@@ -276,7 +271,7 @@ class SncAI(object):
         Return the best point along the paddle with which to hit the ball
         """
         best_position = paddle_frect.size[1] / 2
-        best_score = 0
+        best_score = -10000
         for possibility in possible_collision_positions:
             projected_vel = self.get_projected_vel(possibility, trajectory_position)
             predicted_trajectory = self.get_ball_trajectory(projected_vel, (paddle_edge, trajectory_position),
