@@ -28,7 +28,14 @@ def pong_ai(paddle_frect, other_paddle_frect, ball_frect, table_size):
         # Opponent position
         # Maybe - ball velocity, previous few opponent positions, turn number
     ]
-    return net.serial_activate(inputs)
+    output = net.serial_activate(inputs)
+    print output[0]
+    if output < 0.4:
+        return "down"
+    elif output < 0.6:
+        return "none"
+    else:
+        return "up"
 
 def initialize():
     with open('nn_winner_genome', 'rb') as f:
