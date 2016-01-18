@@ -357,7 +357,7 @@ def game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, sco
         clock.tick(30)
 
     print(score)
-    # return
+    return score
 
 def init_game():
     table_size = (440, 280)
@@ -373,7 +373,7 @@ def init_game():
     timeout = 0.0003
     clock_rate = 80
     turn_wait_rate = 3
-    score_to_win = 10
+    score_to_win = 20
 
 
     screen = pygame.display.set_mode(table_size)
@@ -386,13 +386,13 @@ def init_game():
 
 
 
-    import chaser_ai, neat_ai
+    import chaser_ai, neat_ai, my_pong_ai
 
-
-    paddles[0].move_getter = chaser_ai.pong_ai
+    # lololol the AI we submitted last year could only play on one side
+    paddles[0].move_getter = my_pong_ai.pong_ai
     paddles[1].move_getter = neat_ai.pong_ai
 
-    game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, score_to_win, 1)
+    game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, score_to_win, 0)
 
     screen.blit(pygame.font.Font(None, 32).render(str('SWITCHING SIDES'), True, white), [int(0.6*table_size[0])-8, 0])
 
@@ -401,7 +401,8 @@ def init_game():
 
     paddles[0].move_getter, paddles[1].move_getter = paddles[1].move_getter, paddles[0].move_getter
 
-    game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, score_to_win, 1)
+    # Commenting out switching sides since last year's AI is broken there
+    # game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, score_to_win, 1)
 
 
 
