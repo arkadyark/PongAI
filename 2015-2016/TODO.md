@@ -1,0 +1,5 @@
+- Make a modified version of PongAIvAI.py, that returns the nn_evolve script the outcome of the game
+- Implement neat_ai's pong_ai function which loads the network, and feeds it the inputs and probes its outputs.
+- Implement fitness function, which plays a game to 5/10 points
+  - Important to diversify the playing field, different opponents, different table sizes, play on both left and right
+  - May not be granular enough, we'll see

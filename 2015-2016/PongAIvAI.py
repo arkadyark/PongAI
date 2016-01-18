@@ -168,15 +168,15 @@ class Ball:
                 if (paddle.facing == 1 and self.get_center()[0] < paddle.frect.pos[0] + paddle.frect.size[0]/2) or \
                 (paddle.facing == 0 and self.get_center()[0] > paddle.frect.pos[0] + paddle.frect.size[0]/2):
                     continue
-                
+
                 c = 0
-                
+
                 while self.frect.intersect(paddle.frect) and not self.frect.get_rect().colliderect(walls_Rects[0]) and not self.frect.get_rect().colliderect(walls_Rects[1]):
                     self.frect.move_ip(-.1*self.speed[0], -.1*self.speed[1], move_factor)
-                    
+
                     c += 1
                 theta = paddle.get_angle(self.frect.pos[1]+.5*self.frect.size[1])
-                
+
 
                 v = self.speed
 
@@ -306,15 +306,15 @@ def game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, sco
         ball, score = check_point(score, ball, table_size)
         paddles[0].move(paddles[1].frect, ball.frect, table_size)
         paddles[1].move(paddles[0].frect, ball.frect, table_size)
-        
+
         inv_move_factor = int((ball.speed[0]**2+ball.speed[1]**2)**.5)
         if inv_move_factor > 0:
             for i in range(inv_move_factor):
                 ball.move(paddles, table_size, 1./inv_move_factor)
         else:
             ball.move(paddles, table_size, 1)
-        
-        
+
+
         if not display:
             continue
         if score != old_score:
@@ -383,28 +383,28 @@ def init_game():
                Paddle((table_size[0]-20, table_size[1]/2), paddle_size, paddle_speed, max_angle, 0, timeout)]
     ball = Ball(table_size, ball_size, paddle_bounce, wall_bounce, dust_error, init_speed_mag)
 
-    
-    
-    
-    import chaser_ai
-    
-    
+
+
+
+    import chaser_ai, neat_ai
+
+
     paddles[0].move_getter = chaser_ai.pong_ai
-    paddles[1].move_getter = directions_from_input
-    
+    paddles[1].move_getter = neat_ai.pong_ai
+
     game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, score_to_win, 1)
-    
+
     screen.blit(pygame.font.Font(None, 32).render(str('SWITCHING SIDES'), True, white), [int(0.6*table_size[0])-8, 0])
-    
+
     pygame.display.flip()
     clock.tick(4)
-    
+
     paddles[0].move_getter, paddles[1].move_getter = paddles[1].move_getter, paddles[0].move_getter
-    
+
     game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, score_to_win, 1)
-    
-    
-    
+
+
+
     pygame.quit()
 
 

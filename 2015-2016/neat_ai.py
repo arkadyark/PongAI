@@ -14,9 +14,24 @@ def pong_ai(paddle_frect, other_paddle_frect, ball_frect, table_size):
     bare minimum. Needs the x coordinates of the paddles to be able to play on
     either side.
     '''
-    
-    if turn_number == 1:
-        initialize(paddle_frect, other_paddle_frect, table_size)
 
-    net = nn.create_feed_forward_phenotype(winner) 
+    global turn_number, net
+
+    if turn_number == 1:
+        net = initialize()
+
     turn_number += 1
+
+    inputs = [
+        # Ball position
+        # Player position
+        # Opponent position
+        # Maybe - ball velocity, previous few opponent positions, turn number
+    ]
+    return net.serial_activate(inputs)
+
+def initialize():
+    with open('nn_winner_genome', 'rb') as f:
+        genome = pickle.load(f)
+
+    return nn.create_feed_forward_phenotype(genome)
