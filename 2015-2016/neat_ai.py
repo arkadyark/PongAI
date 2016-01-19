@@ -24,10 +24,17 @@ def pong_ai(paddle_frect, other_paddle_frect, ball_frect, table_size):
 
     inputs = [
         # Ball position
+        ball_frect.pos[0],
+        ball_frect.pos[1],
         # Player position
+        paddle_frect.pos[0],
+        paddle_frect.pos[1],
         # Opponent position
+        other_paddle_frect.pos[0],
+        other_paddle_frect.pos[1]
         # Maybe - ball velocity, previous few opponent positions, turn number
     ]
+    print inputs
     output = net.serial_activate(inputs)
     print output[0]
     if output < 0.4:

@@ -26,9 +26,7 @@ from pygame.locals import *
 
 import math
 
-
-
-
+import chaser_ai, neat_ai, my_pong_ai
 
 white = [255, 255, 255]
 black = [0, 0, 0]
@@ -279,8 +277,6 @@ def render(screen, paddles, ball, score, table_size):
 
     pygame.display.flip()
 
-
-
 def check_point(score, ball, table_size):
     if ball.frect.pos[0]+ball.size[0]/2 < 0:
         score[1] += 1
@@ -297,10 +293,6 @@ def check_point(score, ball, table_size):
 def game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, score_to_win, display):
     score = [0, 0]
 
-
-
-
-
     while max(score) < score_to_win:
         old_score = score[:]
         ball, score = check_point(score, ball, table_size)
@@ -314,7 +306,6 @@ def game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, sco
         else:
             ball.move(paddles, table_size, 1)
 
-
         if not display:
             continue
         if score != old_score:
@@ -323,7 +314,6 @@ def game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, sco
                 screen.blit(font.render("Left scores!", True, white, black), [0, 32])
             else:
                 screen.blit(font.render("Right scores!", True, white, black), [int(table_size[0]/2+20), 32])
-
 
             pygame.display.flip()
             clock.tick(turn_wait_rate)
@@ -359,6 +349,51 @@ def game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, sco
     print(score)
     return score
 
+def play_training_game(ai_to_train):
+    pygame.init()
+    # Define constants
+    # TODO - vary these as well so that network stays general
+    table_size = (440, 280)
+    paddle_size = (10, 70)
+    ball_size = (15, 15)
+    paddle_speed = 1
+    max_angle = 45
+    paddle_bounce = 1.2
+    wall_bounce = 1.00
+    dust_error = 0.00
+    init_speed_mag = 2
+    timeout = 0.0003
+    clock_rate = 80
+    turn_wait_rate = 3
+    score_to_win = 20
+
+    screen = pygame.display.set_mode(table_size)
+    #pygame.display.set_caption('PongAIvAI')
+
+    paddles = [Paddle((20, table_size[1]/2), paddle_size, paddle_speed, max_angle,  1, timeout),
+               Paddle((table_size[0]-20, table_size[1]/2), paddle_size, paddle_speed, max_angle, 0, timeout)]
+    ball = Ball(table_size, ball_size, paddle_bounce, wall_bounce, dust_error, init_speed_mag)
+
+    possible_opponents = [my_pong_ai] # Also add others from classmates last year
+    switch_sides = False # Switch sides when we can
+
+    paddles[0].move_getter = chaser_ai.pong_ai
+    paddles[1].move_getter = ai_to_train
+
+    score = game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, score_to_win, 0)
+    fitness = score[1] - score[0]
+
+    if switch_sides:
+        #screen.blit(pygame.font.Font(None, 32).render(str('SWITCHING SIDES'), True, white), [int(0.6*table_size[0])-8, 0])
+        pygame.display.flip()
+        clock.tick(4)
+        paddles[0].move_getter, paddles[1].move_getter = paddles[1].move_getter, paddles[0].move_getter
+        score = game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, score_to_win, 0)
+        fitness = (fitness + score[0] - score[1])*0.5 # Fitness = score difference per game
+
+    pygame.quit()
+    return fitness
+
 def init_game():
     table_size = (440, 280)
     paddle_size = (10, 70)
@@ -383,16 +418,13 @@ def init_game():
                Paddle((table_size[0]-20, table_size[1]/2), paddle_size, paddle_speed, max_angle, 0, timeout)]
     ball = Ball(table_size, ball_size, paddle_bounce, wall_bounce, dust_error, init_speed_mag)
 
-
-
-
     import chaser_ai, neat_ai, my_pong_ai
 
     # lololol the AI we submitted last year could only play on one side
-    paddles[0].move_getter = my_pong_ai.pong_ai
+    paddles[0].move_getter = chaser_ai.pong_ai
     paddles[1].move_getter = neat_ai.pong_ai
 
-    game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, score_to_win, 0)
+    score = game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, score_to_win, 1)
 
     screen.blit(pygame.font.Font(None, 32).render(str('SWITCHING SIDES'), True, white), [int(0.6*table_size[0])-8, 0])
 
@@ -401,10 +433,7 @@ def init_game():
 
     paddles[0].move_getter, paddles[1].move_getter = paddles[1].move_getter, paddles[0].move_getter
 
-    # Commenting out switching sides since last year's AI is broken there
-    # game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, score_to_win, 1)
-
-
+    game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, score_to_win, 1)
 
     pygame.quit()
 

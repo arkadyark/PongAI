@@ -1,28 +1,59 @@
 # Where the magic happens
 
+# A thought - train the first N generations with a simpler fitness function, like just trying to hit the ball
+# May or may not be necessary
+
 import os
 import pickle
 
 from neat import nn, parallel, population, visualize
 from neat.config import Config
+from PongAIvAI import play_training_game
 
 games_per_net = 3
 num_generations = 50
 
+def get_ai(nn):
+    # Defines a move_getter function from a neural network
+
+    def ai(paddle_frect, other_paddle_frect, ball_frect, table_size):
+        ai.turn_number += 1
+        inputs = [
+            # Ball position
+            ball_frect.pos[0],
+            ball_frect.pos[1],
+            # Player position
+            paddle_frect.pos[0],
+            paddle_frect.pos[1],
+            # Opponent position
+            other_paddle_frect.pos[0],
+            other_paddle_frect.pos[1]
+            # Maybe - ball velocity, previous few opponent positions, turn number
+        ]
+        output = nn.serial_activate(inputs)[0] # Only one output value, get that
+        #print output[0]
+        if output < 0.4:
+            return "down"
+        elif output < 0.6:
+            return "none"
+        else:
+            return "up"
+
+    ai.turn_number = 0
+    return ai
+
 # Use the neural network phenotype to play some games, and see how fit it is
 def evaluate_genome(g):
-    # A thought - train the first N generations with a simpler fitness function, like just trying to hit the ball
-    # May or may not be necessary
 
     net = nn.create_feed_forward_phenotype(g)
+    ai_to_train = get_ai(net)
 
     fitness = 0.0
 
     for game in range(games_per_net):
-        fitness += 1
         # Play game
-        # Get score
-        # Add score difference to fitness
+        ai_to_train.turn_number = 0
+        fitness += play_training_game(ai_to_train)
         # TODO - switch sides, table size, etc
 
     # Fitness = average score difference
