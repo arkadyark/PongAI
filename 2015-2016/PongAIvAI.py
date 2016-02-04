@@ -385,6 +385,7 @@ def play_training_game(ai_to_train):
     switch_sides = False # Switch sides when we can
 
     paddles[0].move_getter = chaser_ai.pong_ai
+
     paddles[0].name = "their-ai"
     paddles[1].move_getter = ai_to_train
     paddles[1].name = "our-ai"
@@ -431,7 +432,8 @@ def init_game():
     import chaser_ai, neat_ai, my_pong_ai
 
     # lololol the AI we submitted last year could only play on one side
-    paddles[0].move_getter = chaser_ai.pong_ai
+    paddles[0].move_getter = directions_from_input
+    
     paddles[0].name = "their-ai"
     paddles[1].move_getter = neat_ai.pong_ai
     paddles[1].name = "our-ai"

@@ -10,8 +10,8 @@ from neat import nn, parallel, population, visualize
 from neat.config import Config
 from PongAIvAI import play_training_game
 
-games_per_net = 3
-num_generations = 10
+games_per_net = 5
+num_generations = 30
 
 def get_ai(nn):
     # Defines a move_getter function from a neural network
@@ -31,10 +31,9 @@ def get_ai(nn):
             # Maybe - ball velocity, previous few opponent positions, turn number
         ]
         output = nn.serial_activate(inputs)[0] # Only one output value, get that
-        #print output[0]
-        if output < 0.4:
+        if output < -0.1:
             return "down"
-        elif output < 0.6:
+        elif output < 0.1:
             return "none"
         else:
             return "up"
@@ -78,12 +77,19 @@ for genome in pop.most_fit_genomes:
     if genome.fitness > best:
         best = genome.fitness
         winner = genome
+        index = pop.most_fit_genomes.index(genome)
+print 'Best genome came in generation', index
 
 with open('nn_winner_genome', 'wb') as f:
     pickle.dump(winner, f)
 
 # Display the winner
 print(winner)
+
+# Get all of the best genomes
+#for i in range(len(pop.most_fit_genomes)):
+#    with open('nn_winner_genome_' + str(i), 'wb') as f:
+#        pickle.dump(pop.most_fit_genomes[i], f)
 
 # Plot the evolution of the best/average fitness.
 visualize.plot_stats(pop, ylog=True, filename="nn_fitness.svg")
