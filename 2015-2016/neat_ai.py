@@ -37,9 +37,9 @@ def pong_ai(paddle_frect, other_paddle_frect, ball_frect, table_size):
     print inputs
     output = net.serial_activate(inputs)
     print output[0]
-    if output < 0.4:
+    if output < -0.1:
         return "down"
-    elif output < 0.6:
+    elif output < 0.1:
         return "none"
     else:
         return "up"
@@ -48,4 +48,5 @@ def initialize():
     with open('nn_winner_genome', 'rb') as f:
         genome = pickle.load(f)
 
+    print genome
     return nn.create_feed_forward_phenotype(genome)

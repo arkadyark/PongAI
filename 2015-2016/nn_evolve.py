@@ -11,7 +11,7 @@ from neat.config import Config
 from PongAIvAI import play_training_game
 
 games_per_net = 3
-num_generations = 50
+num_generations = 10
 
 def get_ai(nn):
     # Defines a move_getter function from a neural network
@@ -44,7 +44,6 @@ def get_ai(nn):
 
 # Use the neural network phenotype to play some games, and see how fit it is
 def evaluate_genome(g):
-
     net = nn.create_feed_forward_phenotype(g)
     ai_to_train = get_ai(net)
 
@@ -72,7 +71,14 @@ pop.epoch(pe.evaluate, num_generations)
 
 # Save the winner
 print('Number of evaluations: ' + str(pop.total_evaluations))
-winner = pop.most_fit_genomes[-1]
+print [g.fitness for g in pop.most_fit_genomes]
+winner = None
+best = -10000000
+for genome in pop.most_fit_genomes:
+    if genome.fitness > best:
+        best = genome.fitness
+        winner = genome
+
 with open('nn_winner_genome', 'wb') as f:
     pickle.dump(winner, f)
 

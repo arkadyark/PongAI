@@ -2,19 +2,19 @@
 
 [phenotype]
 input_nodes          = 6
-hidden_nodes         = 0
+hidden_nodes         = 4
 output_nodes         = 1
-initial_connection   = fs_neat
+initial_connection   = fully_connected
 max_weight           = +30
 min_weight           = -30
 feedforward          = 1
-activation_functions = sigmoid
+activation_functions = tanh
 weight_stdev         = 0.9
 
 [genetic]
-pop_size                = 10
+pop_size                = 5
 max_fitness_threshold   = 59999
-prob_add_conn           = 0.1
+prob_add_conn           = 0.15
 prob_add_node           = 0.1
 prob_delete_conn        = 0.05
 prob_delete_node        = 0.05
