@@ -60,7 +60,7 @@ def evaluate_genome(g):
 
 # Load the config file
 local_dir = os.path.dirname(__file__)
-config = Config(os.path.join(local_dir, 'nn_config'))
+config = Config(os.path.join(local_dir, 'neat_ai/nn_config'))
 
 # Evolve over generations
 pop = population.Population(config)
@@ -80,7 +80,7 @@ for genome in pop.most_fit_genomes:
         index = pop.most_fit_genomes.index(genome)
 print 'Best genome came in generation', index
 
-with open('nn_winner_genome', 'wb') as f:
+with open('neat_ai/nn_winner_genome', 'wb') as f:
     pickle.dump(winner, f)
 
 # Display the winner
@@ -92,10 +92,10 @@ print(winner)
 #        pickle.dump(pop.most_fit_genomes[i], f)
 
 # Plot the evolution of the best/average fitness.
-visualize.plot_stats(pop, ylog=True, filename="nn_fitness.svg")
+visualize.plot_stats(pop, ylog=True, filename="neat_ai/nn_fitness.svg")
 # Visualizes speciation
-visualize.plot_species(pop, filename="nn_speciation.svg")
+visualize.plot_species(pop, filename="neat_ai/nn_speciation.svg")
 # Visualize the best network.
-visualize.draw_net(winner, view=True, filename="nn_winner.gv")
-visualize.draw_net(winner, view=True, filename="nn_winner-enabled.gv", show_disabled=False)
-visualize.draw_net(winner, view=True, filename="nn_winner-enabled-pruned.gv", show_disabled=False, prune_unused=True)
+visualize.draw_net(winner, view=True, filename="neat_ai/nn_winner.gv")
+visualize.draw_net(winner, view=True, filename="neat_ai/nn_winner-enabled.gv", show_disabled=False)
+visualize.draw_net(winner, view=True, filename="neat_ai/nn_winner-enabled-pruned.gv", show_disabled=False, prune_unused=True)

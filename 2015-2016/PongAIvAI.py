@@ -26,7 +26,9 @@ from pygame.locals import *
 
 import math
 
-import chaser_ai, neat_ai, my_pong_ai
+# Import AIs - others and ours
+from other_ais import BallNet, zining, chaser_ai, my_pong_ai
+from neat_ai import neat_ai
 
 white = [255, 255, 255]
 black = [0, 0, 0]
@@ -237,9 +239,6 @@ def directions_from_input(paddle_rect, other_paddle_rect, ball_rect, table_size)
     else:
         return None
 
-
-
-
 def timeout(func, args=(), kwargs={}, timeout_duration=1, default=None):
     '''From:
     http://code.activestate.com/recipes/473878-timeout-function-using-threading/'''
@@ -429,11 +428,10 @@ def init_game():
                Paddle((table_size[0]-20, table_size[1]/2), paddle_size, paddle_speed, max_angle, 0, timeout)]
     ball = Ball(table_size, ball_size, paddle_bounce, wall_bounce, dust_error, init_speed_mag)
 
-    import chaser_ai, neat_ai, my_pong_ai
 
     # lololol the AI we submitted last year could only play on one side
     paddles[0].move_getter = directions_from_input
-    
+
     paddles[0].name = "their-ai"
     paddles[1].move_getter = neat_ai.pong_ai
     paddles[1].name = "our-ai"

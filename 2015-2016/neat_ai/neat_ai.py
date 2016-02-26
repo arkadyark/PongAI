@@ -1,7 +1,7 @@
 # Made by Arkady Arkhangorodsky and Kasra Koushan
 
 from neat import nn
-import pickle
+import pickle, os
 
 turn_number = 1
 net = None
@@ -45,7 +45,9 @@ def pong_ai(paddle_frect, other_paddle_frect, ball_frect, table_size):
         return "up"
 
 def initialize():
-    with open('nn_winner_genome', 'rb') as f:
+    module_dir = os.path.dirname(os.path.abspath(__file__))
+    textfile_path = os.path.join(module_dir, 'nn_winner_genome')
+    with open(textfile_path, 'rb') as f:
         genome = pickle.load(f)
 
     print genome
