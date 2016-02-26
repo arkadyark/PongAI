@@ -27,7 +27,7 @@ from pygame.locals import *
 import math
 
 # Import AIs - others and ours
-from other_ais import BallNet, zining, chaser_ai, my_pong_ai
+from other_ais import BallNet, zining, chaser_ai, arkady, andrew
 from neat_ai import neat_ai
 
 white = [255, 255, 255]
@@ -380,7 +380,7 @@ def play_training_game(ai_to_train):
                Paddle((table_size[0]-20, table_size[1]/2), paddle_size, paddle_speed, max_angle, 0, timeout)]
     ball = Ball(table_size, ball_size, paddle_bounce, wall_bounce, dust_error, init_speed_mag)
 
-    possible_opponents = [my_pong_ai] # Also add others from classmates last year
+    possible_opponents = [chaser_ai, BallNet, zining, andrew, arkady] # Also add others from classmates last year
     switch_sides = False # Switch sides when we can
 
     paddles[0].move_getter = chaser_ai.pong_ai
