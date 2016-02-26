@@ -1,4 +1,5 @@
-- Try giving it ball position as an input
+- Add estimate of running time, confirmation prompt
+- Try giving it ball velocity as an input
 - Make it so we can pick up a genome and train from there, rather than starting over every time
 - Train against simpler AIs to start, and then go harder and harder (perhaps keep track of global state by writing to a file)
 

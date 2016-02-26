@@ -107,7 +107,7 @@ class SncAI(object):
             # Strategy when the ball is heading to the opponent - go where
             # it looks like they're aiming
             self.paddle_target = self.get_centre(paddle_frect)
-            
+
             projected_impact = self.get_ball_trajectory(self.ball_vel, self.ball_frect.pos,
                                                         self.their_edge)
             if self.out_of_reach(projected_impact):

@@ -78,7 +78,10 @@ class Paddle:
         self.speed = factor*self.speed
 
     def move(self, enemy_frect, ball_frect, table_size):
-        direction = self.move_getter(self.frect.copy(), enemy_frect.copy(), ball_frect.copy(), tuple(table_size))
+        try:
+            direction = self.move_getter(self.frect.copy(), enemy_frect.copy(), ball_frect.copy(), tuple(table_size))
+        except:
+            direction = "none"
         #direction = timeout(self.move_getter, (self.frect.copy(), enemy_frect.copy(), ball_frect.copy(), tuple(table_size)), {}, self.timeout)
         if direction == "up":
             self.frect.move_ip(0, -self.speed)
@@ -308,8 +311,6 @@ def game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, sco
             for i in range(inv_move_factor):
                 hits += ball.move(paddles, table_size, 1./inv_move_factor)
         else:
-            # TODO - get ball.move to return if it found a collision with our paddle
-            #   - Incorporate this into our fitness function
             hit_neural_net_paddle = ball.move(paddles, table_size, 1)
 
         if not display:
@@ -339,13 +340,15 @@ def game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, sco
 
         clock.tick(clock_rate)
 
-    font = pygame.font.Font(None, 64)
-    if score[0] > score[1]:
-        screen.blit(font.render("Left wins!", True, white, black), [24, 32])
-    else:
-        screen.blit(font.render("Right wins!", True, white, black), [24, 32])
-    pygame.display.flip()
-    clock.tick(2)
+
+    if display:
+        font = pygame.font.Font(None, 64)
+        if score[0] > score[1]:
+            screen.blit(font.render("Left wins!", True, white, black), [24, 32])
+        else:
+            screen.blit(font.render("Right wins!", True, white, black), [24, 32])
+        pygame.display.flip()
+        clock.tick(2)
 
     pygame.event.pump()
     while any(pygame.key.get_pressed()):
@@ -356,7 +359,6 @@ def game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, sco
     return score, hits
 
 def play_training_game(ai_to_train):
-    pygame.init()
     # Define constants
     # TODO - vary these as well so that network stays general
     table_size = (440, 280)
@@ -371,37 +373,40 @@ def play_training_game(ai_to_train):
     timeout = 0.0003
     clock_rate = 80
     turn_wait_rate = 3
-    score_to_win = 20
-
-    screen = pygame.display.set_mode(table_size)
-    #pygame.display.set_caption('PongAIvAI')
+    score_to_win = 5#20
 
     paddles = [Paddle((20, table_size[1]/2), paddle_size, paddle_speed, max_angle,  1, timeout),
                Paddle((table_size[0]-20, table_size[1]/2), paddle_size, paddle_speed, max_angle, 0, timeout)]
     ball = Ball(table_size, ball_size, paddle_bounce, wall_bounce, dust_error, init_speed_mag)
 
     possible_opponents = [chaser_ai, BallNet, zining, andrew, arkady] # Also add others from classmates last year
-    switch_sides = False # Switch sides when we can
+     # Whether or not the AI can go on both sides
+    switch_sides = {chaser_ai: True, BallNet: True, zining: True, andrew: True, arkady: False}
 
-    paddles[0].move_getter = chaser_ai.pong_ai
+    fitness = 0
+    games = 0
 
-    paddles[0].name = "their-ai"
-    paddles[1].move_getter = ai_to_train
-    paddles[1].name = "our-ai"
+    for opponent in possible_opponents:
+        pygame.init()
+        paddles[0].move_getter = opponent.pong_ai
+        paddles[0].name = "their-ai"
+        paddles[1].move_getter = ai_to_train
+        paddles[1].name = "our-ai"
 
-    score, hits = game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, score_to_win, 0)
-    fitness = score[1] - score[0] + 0.05*hits # Add small bonus for hitting the ball, may help it get started
+        score, hits = game_loop(None, paddles, ball, table_size, clock_rate, turn_wait_rate, score_to_win, 0)
+        fitness += score[1] - score[0] + 0.05*hits # Add small bonus for hitting the ball, may help it get started
+        games += 1
 
-    if switch_sides:
-        #screen.blit(pygame.font.Font(None, 32).render(str('SWITCHING SIDES'), True, white), [int(0.6*table_size[0])-8, 0])
-        pygame.display.flip()
-        clock.tick(4)
-        paddles[0].move_getter, paddles[1].move_getter = paddles[1].move_getter, paddles[0].move_getter
-        score = game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, score_to_win, 0)
-        fitness = (fitness + score[0] - score[1])*0.5 # Fitness = score difference per game
+        if switch_sides[opponent]:
+            clock.tick(4)
+            paddles[0].move_getter, paddles[1].move_getter = paddles[1].move_getter, paddles[0].move_getter
+            score, hits = game_loop(None, paddles, ball, table_size, clock_rate, turn_wait_rate, score_to_win, 0)
+            fitness += score[0] - score[1] + 0.05*hits # Fitness = score difference per game
+            games += 1
 
-    pygame.quit()
-    print 'Fitness: ', fitness
+        pygame.quit()
+
+    fitness = fitness/games
     return fitness
 
 def init_game():
@@ -430,7 +435,8 @@ def init_game():
 
 
     # lololol the AI we submitted last year could only play on one side
-    paddles[0].move_getter = directions_from_input
+    #paddles[0].move_getter = directions_from_input
+    paddles[0].move_getter = BallNet.pong_ai
 
     paddles[0].name = "their-ai"
     paddles[1].move_getter = neat_ai.pong_ai

@@ -5,13 +5,14 @@
 
 import os
 import pickle
+import traceback
 
 from neat import nn, parallel, population, visualize
 from neat.config import Config
 from PongAIvAI import play_training_game
 
 games_per_net = 5
-num_generations = 30
+num_generations = 20
 
 def get_ai(nn):
     # Defines a move_getter function from a neural network
@@ -43,20 +44,34 @@ def get_ai(nn):
 
 # Use the neural network phenotype to play some games, and see how fit it is
 def evaluate_genome(g):
-    net = nn.create_feed_forward_phenotype(g)
-    ai_to_train = get_ai(net)
+      try:
+        net = nn.create_feed_forward_phenotype(g)
+        ai_to_train = get_ai(net)
 
-    fitness = 0.0
+        fitness = 0.0
 
-    for game in range(games_per_net):
-        # Play game
-        ai_to_train.turn_number = 0
-        fitness += play_training_game(ai_to_train)
-        # TODO - switch sides, table size, etc
+        for game in range(games_per_net):
+            # Play game
+            ai_to_train.turn_number = 0
+            fitness += play_training_game(ai_to_train)
+            # TODO - switch sides, table size, etc
 
-    # Fitness = average score difference
-    return fitness / games_per_net
+        # Fitness = average score difference
+        fitness = fitness / games_per_net
+        print 'Fitness: ', fitness
+        return fitness
 
+        # To be able to debug if any errors occur in here, needed because of
+        # parallel processing weirdness
+      except Exception as e:
+        print('Caught exception in worker thread:')
+
+        # This prints the type, value, and stack trace of the
+        # current exception being handled.
+        traceback.print_exc()
+
+        print()
+        raise e
 
 # Load the config file
 local_dir = os.path.dirname(__file__)
