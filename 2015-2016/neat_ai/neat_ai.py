@@ -5,6 +5,7 @@ import pickle, os
 
 turn_number = 1
 net = None
+last_ball_pos = [0,0]
 
 def pong_ai(paddle_frect, other_paddle_frect, ball_frect, table_size):
     '''
@@ -15,10 +16,11 @@ def pong_ai(paddle_frect, other_paddle_frect, ball_frect, table_size):
     either side.
     '''
 
-    global turn_number, net
+    global turn_number, net, last_ball_pos
 
     if turn_number == 1:
         net = initialize()
+        last_ball_pos = [table_size[0]/2, table_size[1]/2]
 
     turn_number += 1
 
@@ -31,9 +33,12 @@ def pong_ai(paddle_frect, other_paddle_frect, ball_frect, table_size):
         paddle_frect.pos[1],
         # Opponent position
         other_paddle_frect.pos[0],
-        other_paddle_frect.pos[1]
+        other_paddle_frect.pos[1],
         # Maybe - ball velocity, previous few opponent positions, turn number
+        last_ball_pos[0] - ball_frect.pos[0],
+        last_ball_pos[1] - ball_frect.pos[1]
     ]
+    last_ball_pos = ball_frect.pos
     print inputs
     output = net.serial_activate(inputs)[0]
     print output

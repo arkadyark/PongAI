@@ -11,13 +11,15 @@ from neat import nn, parallel, population, visualize
 from neat.config import Config
 from PongAIvAI import play_training_game
 
-games_per_net = 5
-num_generations = 20
+games_per_net = 3
+num_generations = 80
 
 def get_ai(nn):
     # Defines a move_getter function from a neural network
 
     def ai(paddle_frect, other_paddle_frect, ball_frect, table_size):
+        if ai.turn_number == 0:
+            ai.last_ball_pos = [table_size[0]/2, table_size[1]/2]
         ai.turn_number += 1
         inputs = [
             # Ball position
@@ -28,9 +30,12 @@ def get_ai(nn):
             paddle_frect.pos[1],
             # Opponent position
             other_paddle_frect.pos[0],
-            other_paddle_frect.pos[1]
+            other_paddle_frect.pos[1],
             # Maybe - ball velocity, previous few opponent positions, turn number
+            ai.last_ball_pos[0] - ball_frect.pos[0],
+            ai.last_ball_pos[1] - ball_frect.pos[1]
         ]
+        ai.last_ball_pos = ball_frect.pos
         output = nn.serial_activate(inputs)[0] # Only one output value, get that
         if output < -0.1:
             return "down"

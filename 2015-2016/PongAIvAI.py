@@ -21,7 +21,7 @@
 #Download PyGame here: https://bitbucket.org/pygame/pygame/downloads
 
 
-import pygame, sys, time, random, os
+import pygame, sys, time, random, os, traceback
 from pygame.locals import *
 
 import math
@@ -82,6 +82,7 @@ class Paddle:
             direction = self.move_getter(self.frect.copy(), enemy_frect.copy(), ball_frect.copy(), tuple(table_size))
         except:
             direction = "none"
+            traceback.print_exc()
         #direction = timeout(self.move_getter, (self.frect.copy(), enemy_frect.copy(), ball_frect.copy(), tuple(table_size)), {}, self.timeout)
         if direction == "up":
             self.frect.move_ip(0, -self.speed)
@@ -296,7 +297,7 @@ def check_point(score, ball, table_size):
     return (ball, score)
 
 
-def game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, score_to_win, display):
+def game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, score_to_win, display, nn_on_right = True):
     score = [0, 0]
     hits = 0
 
@@ -355,7 +356,8 @@ def game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, sco
         pygame.event.pump()
         clock.tick(30)
 
-    print(score, hits)
+    victory = ((nn_on_right and score[1] > score[0]) or (not nn_on_right and score[0] > score[1]))
+    print(score, hits, "Victory" if victory else "Loss")
     return score, hits
 
 def play_training_game(ai_to_train):
@@ -393,14 +395,14 @@ def play_training_game(ai_to_train):
         paddles[1].move_getter = ai_to_train
         paddles[1].name = "our-ai"
 
-        score, hits = game_loop(None, paddles, ball, table_size, clock_rate, turn_wait_rate, score_to_win, 0)
+        score, hits = game_loop(None, paddles, ball, table_size, clock_rate, turn_wait_rate, score_to_win, 0, True)
         fitness += score[1] - score[0] + 0.05*hits # Add small bonus for hitting the ball, may help it get started
         games += 1
 
         if switch_sides[opponent]:
             clock.tick(4)
             paddles[0].move_getter, paddles[1].move_getter = paddles[1].move_getter, paddles[0].move_getter
-            score, hits = game_loop(None, paddles, ball, table_size, clock_rate, turn_wait_rate, score_to_win, 0)
+            score, hits = game_loop(None, paddles, ball, table_size, clock_rate, turn_wait_rate, score_to_win, 0, False)
             fitness += score[0] - score[1] + 0.05*hits # Fitness = score difference per game
             games += 1
 
@@ -436,7 +438,7 @@ def init_game():
 
     # lololol the AI we submitted last year could only play on one side
     #paddles[0].move_getter = directions_from_input
-    paddles[0].move_getter = BallNet.pong_ai
+    paddles[0].move_getter = chaser_ai.pong_ai
 
     paddles[0].name = "their-ai"
     paddles[1].move_getter = neat_ai.pong_ai
