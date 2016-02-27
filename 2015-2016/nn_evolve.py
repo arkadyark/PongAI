@@ -84,7 +84,7 @@ config = Config(os.path.join(local_dir, 'neat_ai/nn_config'))
 
 # Evolve over generations
 pop = population.Population(config)
-pe = parallel.ParallelEvaluator(4, evaluate_genome)
+pe = parallel.ParallelEvaluator(8, evaluate_genome)
 pop.epoch(pe.evaluate, num_generations)
 
 

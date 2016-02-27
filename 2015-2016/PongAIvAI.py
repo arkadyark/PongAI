@@ -27,7 +27,7 @@ from pygame.locals import *
 import math
 
 # Import AIs - others and ours
-from other_ais import BallNet, zining, chaser_ai, arkady, andrew
+from other_ais import BallNet, zining, chaser_ai, arkady, andrew, michael_eric, stephen
 from neat_ai import neat_ai
 
 white = [255, 255, 255]
@@ -297,7 +297,7 @@ def check_point(score, ball, table_size):
     return (ball, score)
 
 
-def game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, score_to_win, display, nn_on_right = True):
+def game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, score_to_win, display, nn_on_right = True, oppenent_name=""):
     score = [0, 0]
     hits = 0
 
@@ -357,7 +357,7 @@ def game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, sco
         clock.tick(30)
 
     victory = ((nn_on_right and score[1] > score[0]) or (not nn_on_right and score[0] > score[1]))
-    print(score, hits, "Victory" if victory else "Loss")
+    print(score, hits, "Victory" if victory else "Loss", oppenent_name)
     return score, hits
 
 def play_training_game(ai_to_train):
@@ -381,9 +381,11 @@ def play_training_game(ai_to_train):
                Paddle((table_size[0]-20, table_size[1]/2), paddle_size, paddle_speed, max_angle, 0, timeout)]
     ball = Ball(table_size, ball_size, paddle_bounce, wall_bounce, dust_error, init_speed_mag)
 
-    possible_opponents = [chaser_ai, BallNet, zining, andrew, arkady] # Also add others from classmates last year
+    possible_opponents = [chaser_ai, BallNet, zining, arkady, stephen, michael_eric] # Also add others from classmates last year
      # Whether or not the AI can go on both sides
-    switch_sides = {chaser_ai: True, BallNet: True, zining: True, andrew: True, arkady: False}
+    switch_sides = {chaser_ai: True, BallNet: True, zining: True, andrew: True, arkady: False, stephen: False, michael_eric: True}
+    opponent_names = {chaser_ai: "chaser", BallNet: "BallNet", zining: "Zining", andrew: "Andrew", arkady: "Arkady",
+                    stephen: "Stephen", michael_eric: "Michael"}
 
     fitness = 0
     games = 0
@@ -395,14 +397,14 @@ def play_training_game(ai_to_train):
         paddles[1].move_getter = ai_to_train
         paddles[1].name = "our-ai"
 
-        score, hits = game_loop(None, paddles, ball, table_size, clock_rate, turn_wait_rate, score_to_win, 0, True)
+        score, hits = game_loop(None, paddles, ball, table_size, clock_rate, turn_wait_rate, score_to_win, 0, True, opponent_names[opponent])
         fitness += score[1] - score[0] + 0.05*hits # Add small bonus for hitting the ball, may help it get started
         games += 1
 
         if switch_sides[opponent]:
             clock.tick(4)
             paddles[0].move_getter, paddles[1].move_getter = paddles[1].move_getter, paddles[0].move_getter
-            score, hits = game_loop(None, paddles, ball, table_size, clock_rate, turn_wait_rate, score_to_win, 0, False)
+            score, hits = game_loop(None, paddles, ball, table_size, clock_rate, turn_wait_rate, score_to_win, 0, False, opponent_names[opponent])
             fitness += score[0] - score[1] + 0.05*hits # Fitness = score difference per game
             games += 1
 

@@ -1,8 +1,7 @@
 3rd place winner from 2015 winter: https://github.com/sooham/PongAI
 EngScis:
-  - Grace Kumagai
-  - Andrew Illerisch
+  - Andrew Ilersich
   - Michael Ding/Eric Bryce
-  - Stephen Xu/Anna Ye
+  - Stephen Xu/Anna Ye/Justin Lin
   - Zining Xu
   - find out others
